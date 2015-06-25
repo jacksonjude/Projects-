@@ -419,6 +419,7 @@
 				7AC2DF381B3B75B5003A007B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		7AC2DF391B3B75B5003A007B /* Build configuration list for PBXNativeTarget "Projects+Tests" */ = {
 			isa = XCConfigurationList;
@@ -427,6 +428,7 @@
 				7AC2DF3B1B3B75B5003A007B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

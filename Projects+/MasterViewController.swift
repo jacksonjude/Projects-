@@ -49,6 +49,13 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         // If appropriate, configure the new managed object.
         // Normally you should use accessor methods, but using KVC here avoids the need to add a custom class to the template.
         newManagedObject.setValue(NSDate(), forKey: "timeStamp")
+        newManagedObject.setValue("Project", forKey: "name")
+        newManagedObject.setValue(NSUUID().UUIDString, forKey: "id")
+        
+        var date = NSDate()
+        date.dateByAddingTimeInterval(60*60*24*1)
+        
+        newManagedObject.setValue(date, forKey: "dueDate")
              
         // Save the context.
         var error: NSError? = nil
@@ -58,6 +65,11 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             //println("Unresolved error \(error), \(error.userInfo)")
             abort()
         }
+        
+        let indexPath = self.fetchedResultsController.indexPathForObject(newManagedObject)
+        self.tableView.selectRowAtIndexPath(indexPath, animated: true, scrollPosition: UITableViewScrollPosition.Middle)
+        
+        self.performSegueWithIdentifier("showDetail", sender: self)
     }
 
     // MARK: - Segues
@@ -68,6 +80,14 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
                 let controller = (segue.destinationViewController as! UINavigationController).topViewController as! DetailViewController
                 controller.detailItem = object
+                if (self == sender! as! NSObject)
+                {
+                    controller.editingDetails = true
+                }
+                else
+                {
+                    controller.editingDetails = false
+                }
                 controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem()
                 controller.navigationItem.leftItemsSupplementBackButton = true
             }
@@ -112,8 +132,13 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
 
     func configureCell(cell: UITableViewCell, atIndexPath indexPath: NSIndexPath) {
-            let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
-        cell.textLabel!.text = object.valueForKey("timeStamp")!.description
+        let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
+        
+        var formatter = NSDateFormatter()
+        formatter.dateFormat = "MM-dd-yy HH:mm"
+        let dateString = formatter.stringFromDate(object.valueForKey("dueDate") as! NSDate)
+        
+        cell.textLabel!.text = NSString(format: "%@ | Due: %@", object.valueForKey("name")!.description as String, dateString) as String
     }
 
     // MARK: - Fetched results controller
@@ -125,7 +150,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         
         let fetchRequest = NSFetchRequest()
         // Edit the entity name as appropriate.
-        let entity = NSEntityDescription.entityForName("Event", inManagedObjectContext: self.managedObjectContext!)
+        let entity = NSEntityDescription.entityForName("Project", inManagedObjectContext: self.managedObjectContext!)
         fetchRequest.entity = entity
         
         // Set the batch size to a suitable number.
