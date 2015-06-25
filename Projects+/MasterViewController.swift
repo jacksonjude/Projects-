@@ -44,18 +44,19 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     func insertNewObject(sender: AnyObject) {
         let context = self.fetchedResultsController.managedObjectContext
         let entity = self.fetchedResultsController.fetchRequest.entity!
-        let newManagedObject = NSEntityDescription.insertNewObjectForEntityForName(entity.name!, inManagedObjectContext: context) as! NSManagedObject
+        let newManagedObject = NSEntityDescription.insertNewObjectForEntityForName(entity.name!, inManagedObjectContext: context) as! Project
              
         // If appropriate, configure the new managed object.
         // Normally you should use accessor methods, but using KVC here avoids the need to add a custom class to the template.
-        newManagedObject.setValue(NSDate(), forKey: "timeStamp")
-        newManagedObject.setValue("Project", forKey: "name")
-        newManagedObject.setValue(NSUUID().UUIDString, forKey: "id")
+        newManagedObject.createdAt = NSDate()
+        newManagedObject.updatedAt = NSDate()
+        newManagedObject.name = "Project"
+        newManagedObject.uuid = NSUUID().UUIDString
         
         var date = NSDate()
         date.dateByAddingTimeInterval(60*60*24*1)
         
-        newManagedObject.setValue(date, forKey: "dueDate")
+        newManagedObject.dueDate = date
              
         // Save the context.
         var error: NSError? = nil
@@ -77,7 +78,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showDetail" {
             if let indexPath = self.tableView.indexPathForSelectedRow() {
-            let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
+            let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project
                 let controller = (segue.destinationViewController as! UINavigationController).topViewController as! DetailViewController
                 controller.detailItem = object
                 if (self == sender! as! NSObject)
@@ -132,13 +133,13 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
 
     func configureCell(cell: UITableViewCell, atIndexPath indexPath: NSIndexPath) {
-        let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
+        let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project
         
         var formatter = NSDateFormatter()
         formatter.dateFormat = "MM-dd-yy HH:mm"
-        let dateString = formatter.stringFromDate(object.valueForKey("dueDate") as! NSDate)
+        let dateString = formatter.stringFromDate(object.dueDate!)
         
-        cell.textLabel!.text = NSString(format: "%@ | Due: %@", object.valueForKey("name")!.description as String, dateString) as String
+        cell.textLabel!.text = NSString(format: "%@ | Due: %@", object.name!, dateString) as String
     }
 
     // MARK: - Fetched results controller
@@ -157,7 +158,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         fetchRequest.fetchBatchSize = 20
         
         // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "timeStamp", ascending: false)
+        let sortDescriptor = NSSortDescriptor(key: "createdAt", ascending: false)
         let sortDescriptors = [sortDescriptor]
         
         fetchRequest.sortDescriptors = [sortDescriptor]

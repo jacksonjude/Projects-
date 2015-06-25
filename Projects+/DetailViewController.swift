@@ -28,6 +28,8 @@ class DetailViewController: UIViewController {
         {
             aDueDatePicker.enabled = true
             aDueDatePicker.hidden = false
+            
+            self.view.endEditing(true)
         }
     }
     
@@ -42,9 +44,9 @@ class DetailViewController: UIViewController {
             }
             
             //save
-            self.detailItem?.setValue(self.projectTitle.text, forKey: "name")
-            self.detailItem?.setValue(self.dueDatePicker.date, forKey: "dueDate")
-            self.detailItem?.setValue(self.projectDescription.text, forKey: "projectDescription")
+            self.detailItem?.name = self.projectTitle.text
+            self.detailItem?.dueDate = self.dueDatePicker.date
+            self.detailItem?.projectDescription  = self.projectDescription.text
             
             var error: NSError? = nil
             if !self.detailItem!.managedObjectContext!.save(&error) {
@@ -57,7 +59,7 @@ class DetailViewController: UIViewController {
         self.editingDetails = !self.editingDetails
     }
     
-    var detailItem: NSManagedObject? {
+    var detailItem: Project? {
         didSet {
             // Update the view.
             self.configureView()
@@ -69,16 +71,16 @@ class DetailViewController: UIViewController {
         if let detail: AnyObject = self.detailItem {
             if let title = self.projectTitle
             {
-                title.text = detail.valueForKey("name") as? String
+                title.text = detail.name
             }
             if let datePicker = self.dueDatePicker
             {
                 let formatter = NSDateFormatter()
-                datePicker.date = (detail.valueForKey("dueDate") as? NSDate)!
+                datePicker.date = detail.dueDate!!
             }
             if let aProjectDescription = self.projectDescription
             {
-                aProjectDescription.text = detail.valueForKey("projectDescription") as? String
+                aProjectDescription.text = detail.projectDescription
             }
         }
         

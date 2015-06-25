@@ -6,7 +6,23 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		7A5658091B3C845E00469154 /* Mogenerator */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 7A56580A1B3C845E00469154 /* Build configuration list for PBXAggregateTarget "Mogenerator" */;
+			buildPhases = (
+				7A56580D1B3C848A00469154 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = Mogenerator;
+			productName = Mogenerator;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
+		7A5658111B3C86A200469154 /* _Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A56580F1B3C86A200469154 /* _Project.swift */; };
+		7A5658121B3C86A200469154 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5658101B3C86A200469154 /* Project.swift */; };
 		7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF171B3B75B4003A007B /* AppDelegate.swift */; };
 		7AC2DF1B1B3B75B4003A007B /* Projects_.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF191B3B75B4003A007B /* Projects_.xcdatamodeld */; };
 		7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */; };
@@ -28,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7A56580F1B3C86A200469154 /* _Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = _Project.swift; sourceTree = "<group>"; };
+		7A5658101B3C86A200469154 /* Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		7AC2DF121B3B75B4003A007B /* Projects+.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Projects+.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC2DF161B3B75B4003A007B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7AC2DF171B3B75B4003A007B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -60,9 +78,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A56580E1B3C86A200469154 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				7A56580F1B3C86A200469154 /* _Project.swift */,
+				7A5658101B3C86A200469154 /* Project.swift */,
+			);
+			name = Model;
+			path = Projects/Model;
+			sourceTree = "<group>";
+		};
 		7AC2DF091B3B75B4003A007B = {
 			isa = PBXGroup;
 			children = (
+				7A56580E1B3C86A200469154 /* Model */,
 				7AC2DF141B3B75B4003A007B /* Projects+ */,
 				7AC2DF2F1B3B75B5003A007B /* Projects+Tests */,
 				7AC2DF131B3B75B4003A007B /* Products */,
@@ -165,6 +194,9 @@
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = jackson;
 				TargetAttributes = {
+					7A5658091B3C845E00469154 = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
 					7AC2DF111B3B75B4003A007B = {
 						CreatedOnToolsVersion = 6.3.2;
 					};
@@ -189,6 +221,7 @@
 			targets = (
 				7AC2DF111B3B75B4003A007B /* Projects+ */,
 				7AC2DF2B1B3B75B5003A007B /* Projects+Tests */,
+				7A5658091B3C845E00469154 /* Mogenerator */,
 			);
 		};
 /* End PBXProject section */
@@ -213,15 +246,33 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		7A56580D1B3C848A00469154 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mogenerator -m Projects+/Projects_.xcdatamodeld -O Projects/Model --swift --template-var arc=true";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		7AC2DF0E1B3B75B4003A007B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A5658111B3C86A200469154 /* _Project.swift in Sources */,
 				7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */,
 				7AC2DF1B1B3B75B4003A007B /* Projects_.xcdatamodeld in Sources */,
 				7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */,
 				7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */,
+				7A5658121B3C86A200469154 /* Project.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -263,6 +314,20 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		7A56580B1B3C845E00469154 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		7A56580C1B3C845E00469154 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		7AC2DF341B3B75B5003A007B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -403,6 +468,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7A56580A1B3C845E00469154 /* Build configuration list for PBXAggregateTarget "Mogenerator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A56580B1B3C845E00469154 /* Debug */,
+				7A56580C1B3C845E00469154 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		7AC2DF0D1B3B75B4003A007B /* Build configuration list for PBXProject "Projects+" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
