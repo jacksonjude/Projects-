@@ -48,8 +48,6 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
              
         // If appropriate, configure the new managed object.
         // Normally you should use accessor methods, but using KVC here avoids the need to add a custom class to the template.
-        newManagedObject.createdAt = NSDate()
-        newManagedObject.updatedAt = NSDate()
         newManagedObject.name = "Project"
         newManagedObject.uuid = NSUUID().UUIDString
         
@@ -158,7 +156,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         fetchRequest.fetchBatchSize = 20
         
         // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "createdAt", ascending: false)
+        let sortDescriptor = NSSortDescriptor(key: "dueDate", ascending: true)
         let sortDescriptors = [sortDescriptor]
         
         fetchRequest.sortDescriptors = [sortDescriptor]
