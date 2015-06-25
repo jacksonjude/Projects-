@@ -24,6 +24,7 @@
 		7A5658181B3CAFB000469154 /* _Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5658161B3CAFB000469154 /* _Project.swift */; };
 		7A5658191B3CAFB000469154 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5658171B3CAFB000469154 /* Project.swift */; };
 		7A56581C1B3CB07800469154 /* ProjectsPlus.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7A56581A1B3CB07800469154 /* ProjectsPlus.xcdatamodeld */; };
+		7A56581E1B3CB20300469154 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A56581D1B3CB20300469154 /* CloudKit.framework */; };
 		7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF171B3B75B4003A007B /* AppDelegate.swift */; };
 		7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */; };
 		7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1E1B3B75B4003A007B /* DetailViewController.swift */; };
@@ -47,6 +48,7 @@
 		7A5658161B3CAFB000469154 /* _Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = _Project.swift; sourceTree = "<group>"; };
 		7A5658171B3CAFB000469154 /* Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		7A56581B1B3CB07800469154 /* Projects_.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Projects_.xcdatamodel; sourceTree = "<group>"; };
+		7A56581D1B3CB20300469154 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		7AC2DF121B3B75B4003A007B /* ProjectsPlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProjectsPlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC2DF161B3B75B4003A007B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7AC2DF171B3B75B4003A007B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A56581E1B3CB20300469154 /* CloudKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +92,7 @@
 		7AC2DF091B3B75B4003A007B = {
 			isa = PBXGroup;
 			children = (
+				7A56581D1B3CB20300469154 /* CloudKit.framework */,
 				7AC2DF141B3B75B4003A007B /* ProjectsPlus */,
 				7AC2DF131B3B75B4003A007B /* Products */,
 			);
@@ -182,7 +186,7 @@
 						DevelopmentTeam = 26Y8AQV29F;
 						SystemCapabilities = {
 							com.apple.iCloud = {
-								enabled = 0;
+								enabled = 1;
 							};
 						};
 					};
@@ -400,6 +404,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ProjectsPlus/ProjectsPlus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
@@ -413,6 +418,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ProjectsPlus/ProjectsPlus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
