@@ -46,8 +46,18 @@ class DetailViewController: UIViewController {
             
             //save
             self.detailItem?.name = self.projectTitle.text
-            self.detailItem?.dueDate = self.dueDatePicker.date
-            self.detailItem?.projectDescription  = self.projectDescription.text
+            let formatter = NSDateFormatter()
+            formatter.dateFormat = "MM-dd-yy HH:mm"
+            let currentDate = formatter.stringFromDate(NSDate())
+            let testing = formatter.stringFromDate(self.dueDatePicker.date)
+            NSLog("\(currentDate)")
+            NSLog("\(testing)")
+            if currentDate != testing
+            {
+                self.detailItem?.dueDate = self.dueDatePicker.date
+            }
+            NSLog("\(self.detailItem?.dueDate)")
+            self.detailItem?.projectDescription = self.projectDescription.text
             
             var error: NSError? = nil
             if !self.detailItem!.managedObjectContext!.save(&error) {
@@ -67,9 +77,11 @@ class DetailViewController: UIViewController {
         }
     }
 
-    func configureView() {
+    func configureView()
+    {
         // Update the user interface for the detail item.
-        if let detail: AnyObject = self.detailItem {
+        if let detail: AnyObject = self.detailItem
+        {
             if let title = self.projectTitle
             {
                 title.text = detail.name
@@ -120,7 +132,9 @@ class DetailViewController: UIViewController {
                 let formatter = NSDateFormatter()
                 formatter.dateFormat = "MM-dd-yy HH:mm"
                 dueDate.enabled = false
-                dueDate.setTitle(formatter.stringFromDate(self.dueDatePicker.date), forState: UIControlState.Normal)
+                let dueDateToSet = self.detailItem?.dueDate
+                let date = formatter.stringFromDate(dueDateToSet!)
+                dueDate.setTitle(date, forState: UIControlState.Normal)
             }
             
             if let projectDescriptionField = self.projectDescription
