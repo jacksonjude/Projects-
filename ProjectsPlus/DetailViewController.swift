@@ -46,17 +46,7 @@ class DetailViewController: UIViewController {
             
             //save
             self.detailItem?.name = self.projectTitle.text
-            let formatter = NSDateFormatter()
-            formatter.dateFormat = "MM-dd-yy HH:mm"
-            let currentDate = formatter.stringFromDate(NSDate())
-            let testing = formatter.stringFromDate(self.dueDatePicker.date)
-            NSLog("\(currentDate)")
-            NSLog("\(testing)")
-            if currentDate != testing
-            {
-                self.detailItem?.dueDate = self.dueDatePicker.date
-            }
-            NSLog("\(self.detailItem?.dueDate)")
+            self.detailItem?.dueDate = self.dueDatePicker.date
             self.detailItem?.projectDescription = self.projectDescription.text
             
             var error: NSError? = nil
@@ -132,9 +122,7 @@ class DetailViewController: UIViewController {
                 let formatter = NSDateFormatter()
                 formatter.dateFormat = "MM-dd-yy HH:mm"
                 dueDate.enabled = false
-                let dueDateToSet = self.detailItem?.dueDate
-                let date = formatter.stringFromDate(dueDateToSet!)
-                dueDate.setTitle(date, forState: UIControlState.Normal)
+                dueDate.setTitle(formatter.stringFromDate(self.dueDatePicker.date), forState: UIControlState.Normal)
             }
             
             if let projectDescriptionField = self.projectDescription
