@@ -4,6 +4,7 @@
 import CoreData
 
 enum ProjectAttributes: String {
+    case cloudKitID = "cloudKitID"
     case createdAt = "createdAt"
     case dueDate = "dueDate"
     case name = "name"
@@ -37,6 +38,11 @@ class _Project: NSManagedObject {
     }
 
     // MARK: - Properties
+
+    @NSManaged
+    var cloudKitID: String?
+
+    // func validateCloudKitID(value: AutoreleasingUnsafePointer<AnyObject>, error: NSErrorPointer) {}
 
     @NSManaged
     var createdAt: NSDate?

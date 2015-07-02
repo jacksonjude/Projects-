@@ -14,6 +14,7 @@ import CloudKit
 class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
 
     var window: UIWindow?
+    var callcout = Int()
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
@@ -26,6 +27,45 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         let masterNavigationController = splitViewController.viewControllers[0] as! UINavigationController
         let controller = masterNavigationController.topViewController as! MasterViewController
         controller.managedObjectContext = self.managedObjectContext
+        
+        let defaults = NSUserDefaults.standardUserDefaults()
+        let subscribed = defaults.objectForKey("subscribed") as? Bool
+        if (subscribed != true)
+        {
+            let predicate = NSPredicate(value: true)
+            
+            //Created
+            
+            let itemSubscriptionCreated = CKSubscription(recordType: "Projects",
+                predicate: predicate,
+                options: .FiresOnRecordCreation | .FiresOnRecordUpdate | .FiresOnRecordDeletion)
+            
+            let notificationInfoCreate = CKNotificationInfo()
+            notificationInfoCreate.alertLocalizationKey = "Updates In Cloud"
+            notificationInfoCreate.shouldBadge = true
+            
+            itemSubscriptionCreated.notificationInfo = notificationInfoCreate
+            
+            let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
+            
+            privateDatabase.saveSubscription(itemSubscriptionCreated, completionHandler: { ( subscription, error) -> Void in
+                if error != nil
+                {
+                    NSLog("An error occured: \(error)")
+                }
+                else
+                {
+                    NSLog("Saved Subscription Succesfully")
+                }
+            })
+            
+            defaults.setObject(true, forKey: "subscribed")
+        }
+        
+        let notificationSettings = UIUserNotificationSettings(forTypes: UIUserNotificationType.Alert, categories: nil)
+        application.registerUserNotificationSettings(notificationSettings)
+        application.registerForRemoteNotifications()
+        
         return true
     }
 
@@ -110,10 +150,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         if coordinator == nil {
             return nil
         }
-        var managedObjectContext = NSManagedObjectContext()
+        var managedObjectContext = NSManagedObjectContext(concurrencyType: NSManagedObjectContextConcurrencyType.MainQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = coordinator
+        
+        /*
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "mergeContextChanges:", name: NSManagedObjectContextDidSaveNotification, object: nil)
+        */
+        
         return managedObjectContext
     }()
+    
+    lazy var backgroundMoc: NSManagedObjectContext? =
+    {
+        let coordinator = self.persistentStoreCoordinator
+        if coordinator == nil {
+            return nil
+        }
+        
+        var backgroundMoc = NSManagedObjectContext(concurrencyType: NSManagedObjectContextConcurrencyType.PrivateQueueConcurrencyType)
+        backgroundMoc.parentContext = self.managedObjectContext
+        
+        return backgroundMoc
+    }()
+
 
     // MARK: - Core Data Saving support
 
@@ -128,6 +187,184 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
             }
         }
     }
-
+    
+    /*
+    func mergeContextChanges(note: NSNotification)
+    {
+        let moc = note.object as! NSManagedObjectContext
+        
+        let thisMoc = self.managedObjectContext
+        
+        thisMoc!.performBlock({
+            let noteData: NSDictionary = note.userInfo!
+            let updates: NSArray = (noteData["updated"] as? NSArray)!
+            for (var i: Int = updates.count-1; i >= 0; i--)
+            {
+                var anError: NSError? = nil
+                let anID: NSManagedObjectID = updates[i] as! NSManagedObjectID
+                let anObject = thisMoc!.existingObjectWithID(anID, error: &anError)
+            }
+            
+            self.managedObjectContext?.mergeChangesFromContextDidSaveNotification(note)
+        })
+    }
+    */
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject]) {
+        let cloudKitNotification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+        if (cloudKitNotification.notificationType == CKNotificationType.Query)
+        {
+            self.callcout++
+            NSLog("Call Count Now \(self.callcout)")
+            let cloudKitQueryNotification: CKQueryNotification = (cloudKitNotification as? CKQueryNotification)!
+            let recordID = cloudKitQueryNotification.recordID
+            
+            let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
+            
+            switch cloudKitQueryNotification.queryNotificationReason
+            {
+                case .RecordCreated:
+                    privateDatabase.fetchRecordWithID(recordID, completionHandler: { (projectRecord, error) -> Void in
+                        if error != nil
+                        {
+                            NSLog("An error occured: \(error)")
+                        }
+                        else
+                        {
+                            
+                            self.backgroundMoc!.performBlock({
+                                
+                                NSLog("Fetched Record Successfully From Cloud...")
+                                let projectName = projectRecord.objectForKey("name") as? String
+                                let projectDueDate = projectRecord.objectForKey("dueDate") as? NSDate
+                                let projectDescription = projectRecord.objectForKey("projectDescription") as? String
+                                let projectUUID = projectRecord.objectForKey("uuid") as? String
+                                
+                                let fetch = NSFetchRequest(entityName: "Project")
+                                let predicate = NSPredicate(format: "uuid = %@", projectUUID!)
+                                fetch.predicate = predicate
+                                var error: NSError? = nil
+                                
+                                let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                                if error != nil
+                                {
+                                    NSLog("An Error Occored:", error!)
+                                }
+                                else
+                                {
+                                    NSLog("Fetched Any Duplicate Objects Successfully From CoreData...")
+                                }
+                                
+                                var newManagedObject: Project? = nil
+                                
+                                if results?.count == 0
+                                {
+                                    newManagedObject = NSEntityDescription.insertNewObjectForEntityForName("Project", inManagedObjectContext: self.backgroundMoc!) as? Project
+                                }
+                                else
+                                {
+                                    newManagedObject = results?.first as? Project
+                                }
+                                
+                                newManagedObject!.name = projectName
+                                newManagedObject!.dueDate = projectDueDate
+                                newManagedObject!.projectDescription = projectDescription
+                                newManagedObject!.uuid = projectUUID
+                                newManagedObject!.cloudKitID = recordID.recordName
+                                
+                                var anError: NSError? = nil
+                                if !self.backgroundMoc!.save(&anError)
+                                {
+                                    NSLog("An error occured: \(anError)")
+                                }
+                            })
+                        }
+                    })
+                case .RecordUpdated:
+                    privateDatabase.fetchRecordWithID(recordID, completionHandler: { (projectRecord, error) -> Void in
+                        if error != nil
+                        {
+                            NSLog("An error occured: \(error)")
+                        }
+                        else
+                        {
+                            self.backgroundMoc!.performBlock({
+                                let fetch = NSFetchRequest(entityName: "Project")
+                                let predicate = NSPredicate(format: "cloudKitID = %@", recordID.recordName!)
+                                fetch.predicate = predicate
+                                var error: NSError? = nil
+                                
+                                let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                                if error != nil
+                                {
+                                    NSLog("An Error Occored:", error!)
+                                }
+                                else
+                                {
+                                    NSLog("Fetched Objects To Update From CoreData...")
+                                }
+                                
+                                let projectName = projectRecord.objectForKey("name") as? String
+                                let projectDueDate = projectRecord.objectForKey("dueDate") as? NSDate
+                                let projectDescription = projectRecord.objectForKey("projectDescription") as? String
+                                let projectUUID = projectRecord.objectForKey("uuid") as? String
+                                
+                                if results?.count > 0
+                                {
+                                    var project = results?.first as? Project
+                                    project?.name = projectName
+                                    project?.dueDate = projectDueDate
+                                    project?.projectDescription = projectDescription
+                                    project?.uuid = projectUUID
+                                    
+                                    var error3: NSError? = nil
+                                    
+                                    if !self.backgroundMoc!.save(&error3)
+                                    {
+                                        NSLog("An Error Occored:", error3!)
+                                    }
+                                }
+                                else
+                                {
+                                    NSLog("No Record Exists")
+                                }
+                            })
+                        }
+                    })
+                case .RecordDeleted:
+                    self.backgroundMoc!.performBlock({
+                        let fetch = NSFetchRequest(entityName: "Project")
+                        let predicate = NSPredicate(format: "cloudKitID = %@", recordID.recordName!)
+                        fetch.predicate = predicate
+                        var error: NSError? = nil
+                        
+                        let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                        if error != nil
+                        {
+                            NSLog("An Error Occored:", error!)
+                        }
+                        else
+                        {
+                            NSLog("Fetched Objects To Delete From CoreData...")
+                        }
+                        
+                        if results?.count > 0
+                        {
+                            self.backgroundMoc?.deleteObject((results?.first! as? NSManagedObject)!)
+                        }
+                        else
+                        {
+                            NSLog("No Record Exists")
+                        }
+                        
+                        var error2: NSError?  = nil
+                        if !self.backgroundMoc!.save(&error2)
+                        {
+                            NSLog("An Error Occored:", error2!)
+                        }
+                    })
+            }
+        }
+    }
 }
 

@@ -248,7 +248,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mogenerator -m Projects+/Projects_.xcdatamodeld -O Projects/Model --swift --template-var arc=true";
+			shellScript = "mogenerator -m ProjectsPlus/ProjectsPlus.xcdatamodeld -O ProjectsPlus/Model --swift";
 		};
 /* End PBXShellScriptBuildPhase section */
 
