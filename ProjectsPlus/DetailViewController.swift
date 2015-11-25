@@ -133,10 +133,19 @@ class DetailViewController: UIViewController {
                 projectDescriptionField.editable = false
             }
         }
+        
+        self.changeFonts()
+    }
+    
+    deinit
+    {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector:"changeFonts", name: UIContentSizeCategoryDidChangeNotification, object: nil)
         // Do any additional setup after loading the view, typically from a nib.
         self.configureView()
         
@@ -146,12 +155,25 @@ class DetailViewController: UIViewController {
             aDueDatePicker.enabled = false
         }
     }
+    
+    func changeFonts()
+    {
+        if let title = self.projectTitle
+        {
+            title.font = UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline)
+        }
+        if let aProjectDescription = self.projectDescription
+        {
+            aProjectDescription.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
+        }
+        if let dueDate = self.dueDateButton
+        {
+            dueDate.titleLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
+        }
+    }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
-    
 }
-
