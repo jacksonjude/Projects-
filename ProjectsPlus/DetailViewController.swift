@@ -50,7 +50,11 @@ class DetailViewController: UIViewController {
             self.detailItem?.projectDescription = self.projectDescription.text
             
             var error: NSError? = nil
-            if !self.detailItem!.managedObjectContext!.save(&error) {
+            do {
+                try self.detailItem!.managedObjectContext!.save()
+            } catch let error1 as NSError {
+                error = error1
+                NSLog("%@", error!)
                 // Replace this implementation with code to handle the error appropriately.
                 // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 //println("Unresolved error \(error), \(error.userInfo)")
@@ -78,7 +82,6 @@ class DetailViewController: UIViewController {
             }
             if let datePicker = self.dueDatePicker
             {
-                let formatter = NSDateFormatter()
                 datePicker.date = detail.dueDate!!
             }
             if let aProjectDescription = self.projectDescription
@@ -120,7 +123,7 @@ class DetailViewController: UIViewController {
             if let dueDate = self.dueDateButton
             {
                 let formatter = NSDateFormatter()
-                formatter.dateFormat = "MM-dd-yy HH:mm"
+                formatter.dateFormat = "MM-dd-yy hh:mm"
                 dueDate.enabled = false
                 dueDate.setTitle(formatter.stringFromDate(self.dueDatePicker.date), forState: UIControlState.Normal)
             }

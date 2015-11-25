@@ -14,6 +14,10 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     var detailViewController: DetailViewController? = nil
     var managedObjectContext: NSManagedObjectContext? = nil
+    var hasObjects = false
+    
+    let kIsSynced = 1
+    let kNeedsSync = 0
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -32,7 +36,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         self.navigationItem.rightBarButtonItem = addButton
         if let split = self.splitViewController {
             let controllers = split.viewControllers
-            self.detailViewController = controllers[controllers.count-1].topViewController as? DetailViewController
+            self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
     }
 
@@ -51,14 +55,20 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         newManagedObject.name = "Project"
         newManagedObject.uuid = NSUUID().UUIDString
         
-        var date = NSDate()
+        let date = NSDate()
         date.dateByAddingTimeInterval(60*60*24*1)
         
         newManagedObject.dueDate = date
-             
+        
+        newManagedObject.syncState = kNeedsSync
+                     
         // Save the context.
         var error: NSError? = nil
-        if !context.save(&error) {
+        do {
+            try context.save()
+        } catch let error1 as NSError {
+            error = error1
+            NSLog("%@", error!)
             // Replace this implementation with code to handle the error appropriately.
             // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
             //println("Unresolved error \(error), \(error.userInfo)")
@@ -75,7 +85,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showDetail" {
-            if let indexPath = self.tableView.indexPathForSelectedRow() {
+            if let indexPath = self.tableView.indexPathForSelectedRow {
             let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project
                 let controller = (segue.destinationViewController as! UINavigationController).topViewController as! DetailViewController
                 controller.detailItem = object
@@ -100,12 +110,12 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        let sectionInfo = self.fetchedResultsController.sections![section] 
         return sectionInfo.numberOfObjects
     }
 
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as! UITableViewCell
+        let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) 
         self.configureCell(cell, atIndexPath: indexPath)
         return cell
     }
@@ -121,7 +131,11 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             context.deleteObject(self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject)
                 
             var error: NSError? = nil
-            if !context.save(&error) {
+            do {
+                try context.save()
+            } catch let error1 as NSError {
+                error = error1
+                NSLog("%@", error!)
                 // Replace this implementation with code to handle the error appropriately.
                 // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 //println("Unresolved error \(error), \(error.userInfo)")
@@ -131,13 +145,26 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
 
     func configureCell(cell: UITableViewCell, atIndexPath indexPath: NSIndexPath) {
-        let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project
+        //Crash for corruption
         
-        var formatter = NSDateFormatter()
-        formatter.dateFormat = "MM-dd-yy HH:mm"
-        let dateString = formatter.stringFromDate(object.dueDate!)
-        
-        cell.textLabel!.text = NSString(format: "%@ | Due: %@", object.name!, dateString) as String
+        if self.fetchedResultsController.sections![0].numberOfObjects > 0 && self.fetchedResultsController.fetchedObjects?.count > 0
+        {
+            let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project
+            let formatter = NSDateFormatter()
+            formatter.dateFormat = "MM-dd-yy hh:mm"
+            let dateString = formatter.stringFromDate(object.dueDate!)
+            
+            cell.textLabel?.font = UIFont(name: "SanFrancisco", size: 1)
+            
+            cell.textLabel!.text = NSString(format: "%@ | Due: %@", object.name!, dateString) as String
+        }
+        else
+        {
+            //self.managedObjectContext?.refreshAllObjects()
+            //self.managedObjectContext?.deleteObject(self.fetchedResultsController.objectAtIndexPath(indexPath) as! Project)
+            
+            //CORRUPPTED
+        }
     }
 
     // MARK: - Fetched results controller
@@ -157,7 +184,6 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         
         // Edit the sort key as appropriate.
         let sortDescriptor = NSSortDescriptor(key: "dueDate", ascending: true)
-        let sortDescriptors = [sortDescriptor]
         
         fetchRequest.sortDescriptors = [sortDescriptor]
         
@@ -168,7 +194,11 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         _fetchedResultsController = aFetchedResultsController
         
     	var error: NSError? = nil
-    	if !_fetchedResultsController!.performFetch(&error) {
+    	do {
+            try _fetchedResultsController!.performFetch()
+        } catch let error1 as NSError {
+            error = error1
+            NSLog("%@", error!)
     	     // Replace this implementation with code to handle the error appropriately.
     	     // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. 
              //println("Unresolved error \(error), \(error.userInfo)")
@@ -196,17 +226,19 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         switch type {
-            case .Insert:
-                tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
-            case .Delete:
-                tableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
-            case .Update:
-                self.configureCell(tableView.cellForRowAtIndexPath(indexPath!)!, atIndexPath: indexPath!)
-            case .Move:
-                tableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
-                tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
-            default:
-                return
+        case .Insert:
+            tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
+        case .Delete:
+            tableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
+        case .Update:
+            self.configureCell(tableView.cellForRowAtIndexPath(indexPath!)!, atIndexPath: indexPath!)
+            //AppDelegate.sharedAppDelegate().syncEngine?.justSaved(anObject as! Project)
+            AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
+        case .Move:
+            tableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
+            tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
+            //AppDelegate.sharedAppDelegate().syncEngine?.justSaved(anObject as! Project)
+            AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
         }
     }
 

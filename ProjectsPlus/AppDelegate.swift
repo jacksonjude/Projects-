@@ -16,33 +16,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     var window: UIWindow?
     var callcout = Int()
 
+    var syncEngine : SyncEngine?
+    
+    var masterController : MasterViewController?
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         let splitViewController = self.window!.rootViewController as! UISplitViewController
         let navigationController = splitViewController.viewControllers[splitViewController.viewControllers.count-1] as! UINavigationController
-        navigationController.topViewController.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem()
+        navigationController.topViewController!.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem()
         splitViewController.delegate = self
 
         let masterNavigationController = splitViewController.viewControllers[0] as! UINavigationController
         let controller = masterNavigationController.topViewController as! MasterViewController
         controller.managedObjectContext = self.managedObjectContext
         
+        self.masterController = controller
+        
+        let notificationSettings = UIUserNotificationSettings(forTypes: UIUserNotificationType.Alert, categories: nil)
+        application.registerUserNotificationSettings(notificationSettings)
+        application.registerForRemoteNotifications()
+        
         let defaults = NSUserDefaults.standardUserDefaults()
         let subscribed = defaults.objectForKey("subscribed") as? Bool
         if (subscribed != true)
         {
-            let predicate = NSPredicate(value: true)
-            
-            //Created
-            
+            let predicate = NSPredicate(format: "TRUEPREDICATE")
+                        
             let itemSubscriptionCreated = CKSubscription(recordType: "Projects",
                 predicate: predicate,
-                options: .FiresOnRecordCreation | .FiresOnRecordUpdate | .FiresOnRecordDeletion)
+                options: [.FiresOnRecordCreation, .FiresOnRecordUpdate, .FiresOnRecordDeletion])
             
             let notificationInfoCreate = CKNotificationInfo()
             notificationInfoCreate.alertLocalizationKey = "Updates In Cloud"
-            notificationInfoCreate.shouldBadge = true
+            notificationInfoCreate.shouldBadge = false
             
             itemSubscriptionCreated.notificationInfo = notificationInfoCreate
             
@@ -51,20 +58,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
             privateDatabase.saveSubscription(itemSubscriptionCreated, completionHandler: { ( subscription, error) -> Void in
                 if error != nil
                 {
-                    NSLog("An error occured: \(error)")
+                    NSLog("An error occured in saving subscription: \(error)")
                 }
                 else
                 {
                     NSLog("Saved Subscription Succesfully")
+                    defaults.setObject(true, forKey: "subscribed")
                 }
             })
-            
-            defaults.setObject(true, forKey: "subscribed")
         }
         
-        let notificationSettings = UIUserNotificationSettings(forTypes: UIUserNotificationType.Alert, categories: nil)
-        application.registerUserNotificationSettings(notificationSettings)
-        application.registerForRemoteNotifications()
+        self.syncEngine = SyncEngine()
         
         return true
     }
@@ -95,7 +99,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
 
     // MARK: - Split view
 
-    func splitViewController(splitViewController: UISplitViewController, collapseSecondaryViewController secondaryViewController:UIViewController!, ontoPrimaryViewController primaryViewController:UIViewController!) -> Bool {
+    func splitViewController(splitViewController: UISplitViewController, collapseSecondaryViewController secondaryViewController:UIViewController, ontoPrimaryViewController primaryViewController:UIViewController) -> Bool {
         if let secondaryAsNavController = secondaryViewController as? UINavigationController {
             if let topAsDetailController = secondaryAsNavController.topViewController as? DetailViewController {
                 if topAsDetailController.detailItem == nil {
@@ -111,9 +115,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     lazy var applicationDocumentsDirectory: NSURL = {
         // The directory the application uses to store the Core Data store file. This code uses a directory named "com.jacksonjude.Projects_" in the application's documents Application Support directory.
         let urls = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
-        return urls[urls.count-1] as! NSURL
+        return urls[urls.count-1] 
     }()
-
+    
     lazy var managedObjectModel: NSManagedObjectModel = {
         // The managed object model for the application. This property is not optional. It is a fatal error for the application not to be able to find and load its model.
         let modelURL = NSBundle.mainBundle().URLForResource("ProjectsPlus", withExtension: "momd")!
@@ -127,7 +131,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("ProjectsPlus.sqlite")
         var error: NSError? = nil
         var failureReason = "There was an error creating or loading the application's saved data."
-        if coordinator!.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: nil, error: &error) == nil {
+        do {
+            try coordinator!.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: nil)
+        } catch var error1 as NSError {
+            error = error1
             coordinator = nil
             // Report any error we got.
             var dict = [String: AnyObject]()
@@ -139,6 +146,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
             // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
             NSLog("Unresolved error \(error), \(error!.userInfo)")
             abort()
+        } catch {
+            fatalError()
         }
         
         return coordinator
@@ -179,11 +188,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     func saveContext () {
         if let moc = self.managedObjectContext {
             var error: NSError? = nil
-            if moc.hasChanges && !moc.save(&error) {
-                // Replace this implementation with code to handle the error appropriately.
-                // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                NSLog("Unresolved error \(error), \(error!.userInfo)")
-                abort()
+            if moc.hasChanges {
+                do {
+                    try moc.save()
+                } catch let error1 as NSError {
+                    error = error1
+                    // Replace this implementation with code to handle the error appropriately.
+                    // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                    NSLog("Unresolved error \(error), \(error!.userInfo)")
+                    abort()
+                }
             }
         }
     }
@@ -210,8 +224,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     }
     */
     
+    class func sharedAppDelegate() -> AppDelegate
+    {
+        return UIApplication.sharedApplication().delegate as! AppDelegate
+    }
+    
     func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject]) {
-        let cloudKitNotification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+        let cloudKitNotification = CKNotification(fromRemoteNotificationDictionary: userInfo as! [String:NSObject])
         if (cloudKitNotification.notificationType == CKNotificationType.Query)
         {
             self.callcout++
@@ -224,7 +243,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
             switch cloudKitQueryNotification.queryNotificationReason
             {
                 case .RecordCreated:
-                    privateDatabase.fetchRecordWithID(recordID, completionHandler: { (projectRecord, error) -> Void in
+                    privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (projectRecord, error) -> Void in
                         if error != nil
                         {
                             NSLog("An error occured: \(error)")
@@ -235,17 +254,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                             self.backgroundMoc!.performBlock({
                                 
                                 NSLog("Fetched Record Successfully From Cloud...")
-                                let projectName = projectRecord.objectForKey("name") as? String
-                                let projectDueDate = projectRecord.objectForKey("dueDate") as? NSDate
-                                let projectDescription = projectRecord.objectForKey("projectDescription") as? String
-                                let projectUUID = projectRecord.objectForKey("uuid") as? String
+                                let projectName = projectRecord!.objectForKey("name") as? String
+                                let projectDueDate = projectRecord!.objectForKey("dueDate") as? NSDate
+                                let projectDescription = projectRecord!.objectForKey("projectDescription") as? String
+                                let projectUUID = projectRecord!.objectForKey("uuid") as? String
                                 
                                 let fetch = NSFetchRequest(entityName: "Project")
                                 let predicate = NSPredicate(format: "uuid = %@", projectUUID!)
                                 fetch.predicate = predicate
                                 var error: NSError? = nil
                                 
-                                let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                                let results: [AnyObject]?
+                                do {
+                                    results = try self.backgroundMoc!.executeFetchRequest(fetch)
+                                } catch let error1 as NSError {
+                                    error = error1
+                                    results = nil
+                                } catch {
+                                    fatalError()
+                                }
                                 if error != nil
                                 {
                                     NSLog("An Error Occored:", error!)
@@ -260,6 +287,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                                 if results?.count == 0
                                 {
                                     newManagedObject = NSEntityDescription.insertNewObjectForEntityForName("Project", inManagedObjectContext: self.backgroundMoc!) as? Project
+                                    UIApplication.sharedApplication().applicationIconBadgeNumber++
                                 }
                                 else
                                 {
@@ -270,18 +298,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                                 newManagedObject!.dueDate = projectDueDate
                                 newManagedObject!.projectDescription = projectDescription
                                 newManagedObject!.uuid = projectUUID
-                                newManagedObject!.cloudKitID = recordID.recordName
                                 
                                 var anError: NSError? = nil
-                                if !self.backgroundMoc!.save(&anError)
-                                {
+                                do {
+                                    try self.backgroundMoc!.save()
+                                } catch let error as NSError {
+                                    anError = error
                                     NSLog("An error occured: \(anError)")
+                                } catch {
+                                    fatalError()
                                 }
                             })
                         }
                     })
                 case .RecordUpdated:
-                    privateDatabase.fetchRecordWithID(recordID, completionHandler: { (projectRecord, error) -> Void in
+                    privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (projectRecord, error) -> Void in
                         if error != nil
                         {
                             NSLog("An error occured: \(error)")
@@ -290,11 +321,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                         {
                             self.backgroundMoc!.performBlock({
                                 let fetch = NSFetchRequest(entityName: "Project")
-                                let predicate = NSPredicate(format: "cloudKitID = %@", recordID.recordName!)
+                                let predicate = NSPredicate(format: "uuid = %@", recordID!.recordName)
                                 fetch.predicate = predicate
                                 var error: NSError? = nil
                                 
-                                let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                                let results: [AnyObject]?
+                                do {
+                                    results = try self.backgroundMoc!.executeFetchRequest(fetch)
+                                } catch let error1 as NSError {
+                                    error = error1
+                                    results = nil
+                                } catch {
+                                    fatalError()
+                                }
                                 if error != nil
                                 {
                                     NSLog("An Error Occored:", error!)
@@ -304,14 +343,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                                     NSLog("Fetched Objects To Update From CoreData...")
                                 }
                                 
-                                let projectName = projectRecord.objectForKey("name") as? String
-                                let projectDueDate = projectRecord.objectForKey("dueDate") as? NSDate
-                                let projectDescription = projectRecord.objectForKey("projectDescription") as? String
-                                let projectUUID = projectRecord.objectForKey("uuid") as? String
+                                let projectName = projectRecord!.objectForKey("name") as? String
+                                let projectDueDate = projectRecord!.objectForKey("dueDate") as? NSDate
+                                let projectDescription = projectRecord!.objectForKey("projectDescription") as? String
+                                let projectUUID = projectRecord!.objectForKey("uuid") as? String
                                 
                                 if results?.count > 0
                                 {
-                                    var project = results?.first as? Project
+                                    let project = results?.first as? Project
                                     project?.name = projectName
                                     project?.dueDate = projectDueDate
                                     project?.projectDescription = projectDescription
@@ -319,9 +358,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                                     
                                     var error3: NSError? = nil
                                     
-                                    if !self.backgroundMoc!.save(&error3)
-                                    {
+                                    do {
+                                        try self.backgroundMoc!.save()
+                                    } catch let error as NSError {
+                                        error3 = error
                                         NSLog("An Error Occored:", error3!)
+                                    } catch {
+                                        fatalError()
                                     }
                                 }
                                 else
@@ -334,11 +377,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                 case .RecordDeleted:
                     self.backgroundMoc!.performBlock({
                         let fetch = NSFetchRequest(entityName: "Project")
-                        let predicate = NSPredicate(format: "cloudKitID = %@", recordID.recordName!)
+                        let predicate = NSPredicate(format: "uuid = %@", recordID!.recordName)
                         fetch.predicate = predicate
                         var error: NSError? = nil
                         
-                        let results = self.backgroundMoc!.executeFetchRequest(fetch, error: &error)
+                        let results: [AnyObject]?
+                        do {
+                            results = try self.backgroundMoc!.executeFetchRequest(fetch)
+                        } catch let error1 as NSError {
+                            error = error1
+                            results = nil
+                        } catch {
+                            fatalError()
+                        }
                         if error != nil
                         {
                             NSLog("An Error Occored:", error!)
@@ -357,10 +408,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
                             NSLog("No Record Exists")
                         }
                         
+                        self.syncEngine?.justCompletedSync = true
+                        
                         var error2: NSError?  = nil
-                        if !self.backgroundMoc!.save(&error2)
-                        {
+                        do {
+                            try self.backgroundMoc!.save()
+                        } catch let error as NSError {
+                            error2 = error
                             NSLog("An Error Occored:", error2!)
+                        } catch {
+                            fatalError()
                         }
                     })
             }

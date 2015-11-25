@@ -25,6 +25,7 @@
 		7A5658191B3CAFB000469154 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5658171B3CAFB000469154 /* Project.swift */; };
 		7A56581C1B3CB07800469154 /* ProjectsPlus.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7A56581A1B3CB07800469154 /* ProjectsPlus.xcdatamodeld */; };
 		7A56581E1B3CB20300469154 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A56581D1B3CB20300469154 /* CloudKit.framework */; };
+		7A8E08CC1B88218A00A24392 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8E08CB1B88218A00A24392 /* SyncEngine.swift */; };
 		7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF171B3B75B4003A007B /* AppDelegate.swift */; };
 		7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */; };
 		7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1E1B3B75B4003A007B /* DetailViewController.swift */; };
@@ -49,6 +50,7 @@
 		7A5658171B3CAFB000469154 /* Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		7A56581B1B3CB07800469154 /* Projects_.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Projects_.xcdatamodel; sourceTree = "<group>"; };
 		7A56581D1B3CB20300469154 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
+		7A8E08CB1B88218A00A24392 /* SyncEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		7AC2DF121B3B75B4003A007B /* ProjectsPlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProjectsPlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC2DF161B3B75B4003A007B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7AC2DF171B3B75B4003A007B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				7AC2DF171B3B75B4003A007B /* AppDelegate.swift */,
 				7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */,
 				7AC2DF1E1B3B75B4003A007B /* DetailViewController.swift */,
+				7A8E08CB1B88218A00A24392 /* SyncEngine.swift */,
 				7AC2DF201B3B75B4003A007B /* Main.storyboard */,
 				7AC2DF231B3B75B4003A007B /* Images.xcassets */,
 				7AC2DF251B3B75B4003A007B /* LaunchScreen.xib */,
@@ -175,7 +178,9 @@
 		7AC2DF0A1B3B75B4003A007B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastSwiftMigration = 0710;
+				LastSwiftUpdateCheck = 0710;
+				LastUpgradeCheck = 0710;
 				ORGANIZATIONNAME = jackson;
 				TargetAttributes = {
 					7A5658091B3C845E00469154 = {
@@ -258,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A5658181B3CAFB000469154 /* _Project.swift in Sources */,
+				7A8E08CC1B88218A00A24392 /* SyncEngine.swift in Sources */,
 				7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */,
 				7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */,
 				7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */,
@@ -338,6 +344,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -409,6 +416,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlus;
 				PROVISIONING_PROFILE = "";
 			};
@@ -423,6 +431,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlus;
 				PROVISIONING_PROFILE = "";
 			};
@@ -442,6 +451,7 @@
 				);
 				INFOPLIST_FILE = ProjectsPlusTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlusTests;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ProjectsPlus.app/ProjectsPlus";
 			};
@@ -457,6 +467,7 @@
 				);
 				INFOPLIST_FILE = ProjectsPlusTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlusTests;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ProjectsPlus.app/ProjectsPlus";
 			};
