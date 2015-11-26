@@ -10,9 +10,16 @@
         <attribute name="syncState" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="uuid" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
+        <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Task" inverseName="parentProject" inverseEntity="Task" syncable="YES"/>
         <userInfo/>
     </entity>
+    <entity name="Task" representedClassName="Task" syncable="YES">
+        <attribute name="completionStatus" optional="YES" attributeType="Integer 16" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="parentProject" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="tasks" inverseEntity="Project" syncable="YES"/>
+    </entity>
     <elements>
-        <element name="Project" positionX="261" positionY="189" width="128" height="150"/>
+        <element name="Project" positionX="261" positionY="189" width="128" height="165"/>
+        <element name="Task" positionX="261" positionY="243" width="128" height="90"/>
     </elements>
 </model>

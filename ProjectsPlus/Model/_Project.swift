@@ -13,6 +13,10 @@ public enum ProjectAttributes: String {
     case uuid = "uuid"
 }
 
+public enum ProjectRelationships: String {
+    case tasks = "tasks"
+}
+
 @objc public
 class _Project: NSManagedObject {
 
@@ -75,6 +79,37 @@ class _Project: NSManagedObject {
     // func validateUuid(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
 
     // MARK: - Relationships
+
+    @NSManaged public
+    var tasks: NSSet
+
+}
+
+extension _Project {
+
+    func addTasks(objects: NSSet) {
+        let mutable = self.tasks.mutableCopy() as! NSMutableSet
+        mutable.unionSet(objects as Set<NSObject>)
+        self.tasks = mutable.copy() as! NSSet
+    }
+
+    func removeTasks(objects: NSSet) {
+        let mutable = self.tasks.mutableCopy() as! NSMutableSet
+        mutable.minusSet(objects as Set<NSObject>)
+        self.tasks = mutable.copy() as! NSSet
+    }
+
+    func addTasksObject(value: Task!) {
+        let mutable = self.tasks.mutableCopy() as! NSMutableSet
+        mutable.addObject(value)
+        self.tasks = mutable.copy() as! NSSet
+    }
+
+    func removeTasksObject(value: Task!) {
+        let mutable = self.tasks.mutableCopy() as! NSMutableSet
+        mutable.removeObject(value)
+        self.tasks = mutable.copy() as! NSSet
+    }
 
 }
 

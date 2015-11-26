@@ -43,8 +43,8 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Name:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WWP-Sq-085">
-                                <rect key="frame" x="193" y="137" width="51" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WWP-Sq-085">
+                                <rect key="frame" x="194" y="137" width="50" height="21"/>
                                 <animations/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="21" id="WpE-ZN-i1I"/>
@@ -54,7 +54,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Due Date:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7AB-39-ZQM">
-                                <rect key="frame" x="167" y="170" width="76.5" height="20.5"/>
+                                <rect key="frame" x="168" y="170" width="76" height="20.5"/>
                                 <animations/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -67,7 +67,7 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ord-T1-Zj3" userLabel="projectDescription">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ord-T1-Zj3" userLabel="projectDescription">
                                 <rect key="frame" x="252" y="204" width="240" height="128"/>
                                 <animations/>
                                 <color key="backgroundColor" white="0.86654502467105265" alpha="1" colorSpace="calibratedWhite"/>
@@ -77,7 +77,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
-                            <datePicker contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="KUq-lJ-JcX" userLabel="DueDatePicker">
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="KUq-lJ-JcX" userLabel="DueDatePicker">
                                 <rect key="frame" x="0.0" y="438" width="600" height="162"/>
                                 <animations/>
                                 <date key="date" timeIntervalSinceReferenceDate="456944203.99679297">
@@ -91,6 +91,27 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                             </button>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="q6G-LN-kDK">
+                                <rect key="frame" x="252" y="340" width="240" height="200"/>
+                                <animations/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="200" id="y0h-U4-nBC"/>
+                                </constraints>
+                                <connections>
+                                    <outlet property="dataSource" destination="JEX-9P-axG" id="lfM-cN-D8x"/>
+                                    <outlet property="delegate" destination="JEX-9P-axG" id="lzt-Hy-pG4"/>
+                                </connections>
+                            </tableView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9jk-Up-JyD">
+                                <rect key="frame" x="180" y="340" width="64" height="30"/>
+                                <animations/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="64" id="CWy-bd-t3n"/>
+                                    <constraint firstAttribute="height" constant="30" id="jHE-hH-2nc"/>
+                                </constraints>
+                                <state key="normal" title="Add Task"/>
+                            </button>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -99,27 +120,35 @@
                             <constraint firstItem="7AB-39-ZQM" firstAttribute="top" secondItem="WWP-Sq-085" secondAttribute="bottom" constant="12" id="GUl-Vc-h8B"/>
                             <constraint firstItem="vyQ-5t-t6Q" firstAttribute="top" secondItem="LeK-Mr-rhQ" secondAttribute="bottom" constant="3" id="JTC-ev-oWS"/>
                             <constraint firstItem="LeK-Mr-rhQ" firstAttribute="leading" secondItem="WWP-Sq-085" secondAttribute="trailing" constant="8" symbolic="YES" id="JUf-Gg-VhR"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="ord-T1-Zj3" secondAttribute="trailing" constant="92" id="NXF-sG-BV2"/>
+                            <constraint firstItem="q6G-LN-kDK" firstAttribute="leading" secondItem="ord-T1-Zj3" secondAttribute="leading" id="NWP-26-wa6"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="ord-T1-Zj3" secondAttribute="trailing" constant="88" id="NXF-sG-BV2"/>
                             <constraint firstItem="WWP-Sq-085" firstAttribute="top" secondItem="SYR-Wa-9uf" secondAttribute="bottom" constant="73" id="QoG-EO-A4j"/>
+                            <constraint firstItem="KUq-lJ-JcX" firstAttribute="top" secondItem="9jk-Up-JyD" secondAttribute="bottom" constant="68" id="Sue-yF-cgY"/>
+                            <constraint firstItem="q6G-LN-kDK" firstAttribute="trailing" secondItem="ord-T1-Zj3" secondAttribute="trailing" id="Tq7-qy-uDu"/>
                             <constraint firstItem="KUq-lJ-JcX" firstAttribute="leading" secondItem="svH-Pt-448" secondAttribute="leading" id="TwD-tL-kt6"/>
                             <constraint firstItem="ord-T1-Zj3" firstAttribute="top" secondItem="aPq-2o-yHu" secondAttribute="top" id="U53-pQ-HxK"/>
                             <constraint firstItem="LeK-Mr-rhQ" firstAttribute="leading" secondItem="ord-T1-Zj3" secondAttribute="leading" id="Y5l-lZ-UOK"/>
                             <constraint firstItem="WWP-Sq-085" firstAttribute="trailing" secondItem="7AB-39-ZQM" secondAttribute="trailing" id="ZfL-6V-eIQ"/>
+                            <constraint firstAttribute="bottom" secondItem="9jk-Up-JyD" secondAttribute="bottom" constant="230" id="agP-FR-JTA"/>
                             <constraint firstItem="KUq-lJ-JcX" firstAttribute="bottom" secondItem="GAO-Cl-Wes" secondAttribute="top" id="esd-r6-1Zl"/>
                             <constraint firstItem="ord-T1-Zj3" firstAttribute="top" secondItem="vyQ-5t-t6Q" secondAttribute="bottom" constant="8" symbolic="YES" id="jOf-6c-Ycd"/>
                             <constraint firstItem="LeK-Mr-rhQ" firstAttribute="centerX" secondItem="vyQ-5t-t6Q" secondAttribute="centerX" id="oGf-da-HqN"/>
                             <constraint firstItem="WWP-Sq-085" firstAttribute="trailing" secondItem="aPq-2o-yHu" secondAttribute="trailing" id="pYV-Md-rjC"/>
                             <constraint firstAttribute="centerX" secondItem="LeK-Mr-rhQ" secondAttribute="centerX" id="s67-xu-GDI"/>
+                            <constraint firstItem="q6G-LN-kDK" firstAttribute="top" secondItem="ord-T1-Zj3" secondAttribute="bottom" constant="8" symbolic="YES" id="si4-DZ-72C"/>
                             <constraint firstItem="LeK-Mr-rhQ" firstAttribute="centerX" secondItem="KUq-lJ-JcX" secondAttribute="centerX" id="teu-s5-wIi"/>
+                            <constraint firstItem="q6G-LN-kDK" firstAttribute="leading" secondItem="9jk-Up-JyD" secondAttribute="trailing" constant="8" symbolic="YES" id="ykU-xs-ocA"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Project Details" id="mOI-FS-AaM"/>
                     <connections>
+                        <outlet property="addTaskButton" destination="9jk-Up-JyD" id="fUv-7Y-pvO"/>
                         <outlet property="dueDateButton" destination="vyQ-5t-t6Q" id="bec-F5-UFq"/>
                         <outlet property="dueDatePicker" destination="KUq-lJ-JcX" id="qfC-0S-XMW"/>
                         <outlet property="projectDescription" destination="ord-T1-Zj3" id="ojm-5d-fZN"/>
                         <outlet property="projectTitle" destination="LeK-Mr-rhQ" id="OLm-Ks-PsT"/>
+                        <outlet property="tasksTableView" destination="q6G-LN-kDK" id="Xvb-2f-lyd"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="FJe-Yq-33r" sceneMemberID="firstResponder"/>

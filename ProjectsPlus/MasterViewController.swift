@@ -10,8 +10,8 @@ import UIKit
 import CoreData
 import CloudKit
 
-class MasterViewController: UITableViewController, NSFetchedResultsControllerDelegate {
-
+class MasterViewController: UITableViewController, NSFetchedResultsControllerDelegate
+{
     var detailViewController: DetailViewController? = nil
     var managedObjectContext: NSManagedObjectContext? = nil
     var hasObjects = false

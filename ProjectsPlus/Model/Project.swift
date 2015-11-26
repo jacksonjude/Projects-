@@ -2,11 +2,11 @@ import Foundation
 
 @objc(Project)
 
-class Project: _Project {
+public class Project: _Project {
 
 	// Custom logic goes here.
     
-    override func willSave()
+    override public func willSave()
     {
         super.willSave()
         
