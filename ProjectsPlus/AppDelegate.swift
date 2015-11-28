@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     var window: UIWindow?
     var callcout = Int()
 
-    var syncEngine : ProjectSyncEngine?
+    var syncEngine : SyncEngine?
     
     var masterController : MasterViewController?
 
@@ -37,7 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         application.registerUserNotificationSettings(notificationSettings)
         application.registerForRemoteNotifications()
         
-        self.syncEngine = ProjectSyncEngine()
+        self.syncEngine = SyncEngine()
         
         return true
     }

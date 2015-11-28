@@ -18,6 +18,9 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
     
     var justCompletedSync = false
     
+    let remoteSubscriptions = NSMutableDictionary()
+    let localFetchedResultsController = NSMutableArray()
+    
     var managedObjectContext: NSManagedObjectContext = {
         var managedObjectContext = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
         managedObjectContext.parentContext = AppDelegate.sharedAppDelegate().managedObjectContext
@@ -25,16 +28,48 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
         return managedObjectContext
     }()
     
-    var fetchedResultsController: NSFetchedResultsController?
-    
-    func entityType() -> String
+    func setupLocalFetchedResultsController()
     {
-        return ""
+        let fetchRequest = NSFetchRequest()
+        // Edit the entity name as appropriate.
+        let entity = NSEntityDescription.entityForName("Project", inManagedObjectContext: self.managedObjectContext)
+        fetchRequest.entity = entity
+        
+        // Set the batch size to a suitable number.
+        fetchRequest.fetchBatchSize = 20
+        
+        // Edit the sort key as appropriate.
+        let sortDescriptor = NSSortDescriptor(key: "dueDate", ascending: true)
+        
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        // Edit the section name key path and cache name if appropriate.
+        // nil for section name key path means "no sections".
+        let projectsFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: "Master")
+        projectsFetchedResultsController.delegate = self
+        
+        self.managedObjectContext.performBlockAndWait
+            {
+                var error: NSError? = nil
+                do {
+                    try projectsFetchedResultsController.performFetch()
+                } catch let error1 as NSError {
+                    error = error1
+                    print("Unresolved error \(error), \(error!.userInfo)")
+                } catch {
+                    fatalError()
+                }
+        }
+        self.localFetchedResultsController.addObject(projectsFetchedResultsController)
+        
+        
+        
     }
     
     @objc func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?)
     {
-        let resultsProject = anObject as! Project
+        let localRecord = anObject as! Syncable
+        let entityType = NSStringFromClass(anObject.classForCoder)
         let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase
         
         if self.justCompletedSync == true
@@ -48,8 +83,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                 case .Insert:
                     break
                 case .Delete:
-                    /*CKRecordZoneID(zoneName: "Project" ,ownerName: CKOwnerDefaultName)*/
-                    let query = CKQuery(recordType: "Project", predicate: NSPredicate(format: "uuid == %@", resultsProject.uuid!))
+                    let query = CKQuery(recordType: entityType, predicate: NSPredicate(format: "uuid == %@", localRecord.uuid!))
                     privateDatabase.performQuery(query, inZoneWithID: CKRecordZone.defaultRecordZone().zoneID, completionHandler:
                     { (results, error) -> Void in
                         if error != nil
@@ -60,12 +94,12 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                         {
                             if results!.first != nil
                             {
-                                privateDatabase.deleteRecordWithID(CKRecordID(recordName: resultsProject.uuid!), completionHandler: { (recordID, newError) -> Void in
+                                privateDatabase.deleteRecordWithID(CKRecordID(recordName: localRecord.uuid!), completionHandler: { (recordID, newError) -> Void in
                                     if newError != nil
                                     {
                                         var newError: NSError? = nil
                                         
-                                        resultsProject.syncState = self.kIsSynced
+                                        localRecord.syncState = self.kIsSynced
                                         
                                         self.justCompletedSync = true
                                         
@@ -83,17 +117,17 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                         }
                     })
                 case .Update:
-                    self.justSaved(resultsProject)
+                    self.justSaved(localRecord, entityType: entityType)
                 case .Move:
-                    self.justSaved(resultsProject)
+                    self.justSaved(localRecord, entityType: entityType)
             }
         }
     }
     
-    func justSaved(resultsProject: Project)
+    func justSaved(localRecord: Syncable, entityType: String)
     {
         let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase
-        let query = CKQuery(recordType: "Project", predicate: NSPredicate(format: "uuid == %@", resultsProject.uuid!))
+        let query = CKQuery(recordType: "Project", predicate: NSPredicate(format: "uuid == %@", localRecord.uuid!))
         privateDatabase.performQuery(query, inZoneWithID: CKRecordZone.defaultRecordZone().zoneID, completionHandler:
             { (results, error) -> Void in
                 if error != nil
@@ -104,14 +138,11 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                 {
                     if results?.count > 0
                     {
-                        //let noteID = CKRecordID(recordName: resultsProject.uuid!)
-                        //let noteRecord = CKRecord(recordType: "Project", recordID: noteID)
-                        let noteRecord = (results?.first)! as CKRecord
-                        noteRecord.setObject(resultsProject.name, forKey: "name")
-                        noteRecord.setObject(resultsProject.dueDate, forKey: "dueDate")
-                        noteRecord.setObject(resultsProject.projectDescription, forKey: "projectDescription")
-                        noteRecord.setObject(resultsProject.uuid, forKey: "uuid")
-                        privateDatabase.saveRecord(noteRecord, completionHandler: { (record, error) -> Void in
+                        let remoteRecord = (results?.first)! as CKRecord
+                        
+                        localRecord.updateToRemote(remoteRecord)
+                        
+                        privateDatabase.saveRecord(remoteRecord, completionHandler: { (record, error) -> Void in
                             if (error != nil) {
                                 //NSLog("Error: \(error)")
                             }
@@ -121,7 +152,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                                     {
                                         var newError: NSError? = nil
                                         
-                                        resultsProject.syncState = self.kIsSynced
+                                        localRecord.syncState = self.kIsSynced
                                         
                                         self.justCompletedSync = true
                                         
@@ -139,15 +170,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                     }
                     else
                     {
-                        let fetchRequest = NSFetchRequest(entityName: "Project")
-                        
-                        // Create a sort descriptor object that sorts on the "title"
-                        // property of the Core Data object
-                        let sortDescriptor = NSSortDescriptor(key: "dueDate", ascending: true)
-                        
-                        // Set the list of sort descriptors in the fetch request,
-                        // so it includes the sort descriptor
-                        fetchRequest.sortDescriptors = [sortDescriptor]
+                        let fetchRequest = NSFetchRequest(entityName: entityType)
                         
                         // Create a new predicate that filters out any object that
                         // doesn't have a title of "Best Language" exactly.
@@ -160,7 +183,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                         var error: NSError? = nil
                         
                         do {
-                            fetchResults = try self.managedObjectContext.executeFetchRequest(fetchRequest) as? [Project]
+                            fetchResults = try self.managedObjectContext.executeFetchRequest(fetchRequest) as? [Syncable]
                         } catch let error1 as NSError {
                             error = error1
                             fetchResults = nil
@@ -175,25 +198,22 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                         {
                             NSLog("Fetched Objects To Update From CoreData...")
                         }
-                        let projects = fetchResults
-                        for resultsProject in projects! as! [Project]
+                        for localRecord in fetchResults! as! [Syncable]
                         {
                             ///////
                             
-                            if resultsProject.syncState == self.kNeedsSync
+                            if localRecord.syncState == self.kNeedsSync
                             {
                                 
-                                let noteID = CKRecordID(recordName: resultsProject.uuid!)
+                                let remoteID = CKRecordID(recordName: localRecord.uuid!)
                                 
-                                let noteRecord = CKRecord(recordType: "Project", recordID: noteID)
-                                noteRecord.setObject(resultsProject.name, forKey: "name")
-                                noteRecord.setObject(resultsProject.dueDate, forKey: "dueDate")
-                                noteRecord.setObject(resultsProject.projectDescription, forKey: "projectDescription")
-                                noteRecord.setObject(resultsProject.uuid, forKey: "uuid")
+                                let remoteRecord = CKRecord(recordType: entityType, recordID: remoteID)
+                                
+                                localRecord.updateToRemote(remoteRecord)
                                 
                                 let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase
                                 
-                                privateDatabase.saveRecord(noteRecord, completionHandler: { (record, error) -> Void in
+                                privateDatabase.saveRecord(remoteRecord, completionHandler: { (record, error) -> Void in
                                     if (error != nil) {
                                         //NSLog("Error: \(error)")
                                     }
@@ -203,7 +223,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                                             {
                                                 var newError: NSError? = nil
                                                 
-                                                resultsProject.syncState = self.kIsSynced
+                                                localRecord.syncState = self.kIsSynced
                                                 
                                                 self.justCompletedSync = true
                                                 
@@ -225,37 +245,76 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
         })
     }
     
+    func setupRemoteSubscriptions()
+    {
+        let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
+        privateDatabase.fetchAllSubscriptionsWithCompletionHandler { (remoteSubscriptions, remoteError) -> Void in
+            
+            if (remoteSubscriptions!.count > 0)
+            {
+                // deeje 2015-11-27 this never gets called… ?!?!?
+                for remoteSubscription in remoteSubscriptions!
+                {
+                    self.remoteSubscriptions.setObject(remoteSubscription.recordType!, forKey: remoteSubscription.subscriptionID)
+                }
+            }
+            else
+            {
+                let predicate = NSPredicate(format: "TRUEPREDICATE")
+                
+                let notificationInfo = CKNotificationInfo()
+                notificationInfo.alertLocalizationKey = "Updates In Cloud"
+                notificationInfo.shouldBadge = false
+                
+                let projectSubscription = CKSubscription(recordType: "Project",
+                    predicate: predicate,
+                    options: [.FiresOnRecordCreation, .FiresOnRecordUpdate, .FiresOnRecordDeletion])
+                projectSubscription.notificationInfo = notificationInfo
+                privateDatabase.saveSubscription(projectSubscription, completionHandler: { ( subscription, error) -> Void in
+                    if error != nil
+                    {
+                        NSLog("An error occured in saving subscription: \(error)")
+                    }
+                    else
+                    {
+                        NSLog("Saved Subscription Succesfully")
+                        
+                        self.remoteSubscriptions.setObject("Project", forKey: (subscription?.subscriptionID)!)
+                    }
+                })
+            }
+        }
+    }
+    
     func handleRemoteNotifications(userInfo: [NSObject : AnyObject])
     {
         let cloudKitNotification = CKNotification(fromRemoteNotificationDictionary: userInfo as! [String:NSObject])
         if (cloudKitNotification.notificationType == CKNotificationType.Query)
         {
+            let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
+            
             let cloudKitQueryNotification: CKQueryNotification = (cloudKitNotification as? CKQueryNotification)!
             let recordID = cloudKitQueryNotification.recordID
-            
-            let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
             
             switch cloudKitQueryNotification.queryNotificationReason
             {
             case .RecordCreated:
-                privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (projectRecord, error) -> Void in
+                privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (remoteRecord, error) -> Void in
                     if error != nil
                     {
                         NSLog("An error occured: \(error)")
                     }
                     else
                     {
+                        let entityType = remoteRecord?.recordType
                         
                         self.managedObjectContext.performBlock({
                             
                             NSLog("Fetched Record Successfully From Cloud...")
-                            let projectName = projectRecord!.objectForKey("name") as? String
-                            let projectDueDate = projectRecord!.objectForKey("dueDate") as? NSDate
-                            let projectDescription = projectRecord!.objectForKey("projectDescription") as? String
-                            let projectUUID = projectRecord!.objectForKey("uuid") as? String
+                            let objectUUID = remoteRecord!.objectForKey("uuid") as? String
                             
-                            let fetch = NSFetchRequest(entityName: "Project")
-                            let predicate = NSPredicate(format: "uuid = %@", projectUUID!)
+                            let fetch = NSFetchRequest(entityName: entityType!)
+                            let predicate = NSPredicate(format: "uuid = %@", objectUUID!)
                             fetch.predicate = predicate
                             var error: NSError? = nil
                             
@@ -277,22 +336,19 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                                 NSLog("Fetched Any Duplicate Objects Successfully From CoreData...")
                             }
                             
-                            var newManagedObject: Project? = nil
+                            var localRecord: Syncable? = nil
                             
                             if results?.count == 0
                             {
-                                newManagedObject = NSEntityDescription.insertNewObjectForEntityForName("Project", inManagedObjectContext: self.managedObjectContext) as? Project
+                                localRecord = NSEntityDescription.insertNewObjectForEntityForName(entityType!, inManagedObjectContext: self.managedObjectContext) as? Syncable
                                 UIApplication.sharedApplication().applicationIconBadgeNumber++
                             }
                             else
                             {
-                                newManagedObject = results?.first as? Project
+                                localRecord = results?.first as? Syncable
                             }
                             
-                            newManagedObject!.name = projectName
-                            newManagedObject!.dueDate = projectDueDate
-                            newManagedObject!.projectDescription = projectDescription
-                            newManagedObject!.uuid = projectUUID
+                            localRecord!.updateFromRemote(remoteRecord!)
                             
                             var anError: NSError? = nil
                             do {
@@ -307,15 +363,17 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                     }
                 })
             case .RecordUpdated:
-                privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (projectRecord, error) -> Void in
+                privateDatabase.fetchRecordWithID(recordID!, completionHandler: { (remoteRecord, error) -> Void in
                     if error != nil
                     {
                         NSLog("An error occured: \(error)")
                     }
                     else
                     {
+                        let entityType = remoteRecord?.recordType
+                        
                         self.managedObjectContext.performBlock({
-                            let fetch = NSFetchRequest(entityName: "Project")
+                            let fetch = NSFetchRequest(entityName: entityType!)
                             let predicate = NSPredicate(format: "uuid = %@", recordID!.recordName)
                             fetch.predicate = predicate
                             var error: NSError? = nil
@@ -338,18 +396,11 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                                 NSLog("Fetched Objects To Update From CoreData...")
                             }
                             
-                            let projectName = projectRecord!.objectForKey("name") as? String
-                            let projectDueDate = projectRecord!.objectForKey("dueDate") as? NSDate
-                            let projectDescription = projectRecord!.objectForKey("projectDescription") as? String
-                            let projectUUID = projectRecord!.objectForKey("uuid") as? String
-                            
                             if results?.count > 0
                             {
-                                let project = results?.first as? Project
-                                project?.name = projectName
-                                project?.dueDate = projectDueDate
-                                project?.projectDescription = projectDescription
-                                project?.uuid = projectUUID
+                                let localRecord = results?.first as? Syncable
+                                
+                                localRecord?.updateFromRemote(remoteRecord!)
                                 
                                 var error3: NSError? = nil
                                 
@@ -371,36 +422,43 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                 })
             case .RecordDeleted:
                 self.managedObjectContext.performBlock({
-                    let fetch = NSFetchRequest(entityName: "Project")
-                    let predicate = NSPredicate(format: "uuid = %@", recordID!.recordName)
-                    fetch.predicate = predicate
-                    var error: NSError? = nil
                     
-                    let results: [AnyObject]?
-                    do {
-                        results = try self.managedObjectContext.executeFetchRequest(fetch)
-                    } catch let error1 as NSError {
-                        error = error1
-                        results = nil
-                    } catch {
-                        fatalError()
-                    }
-                    if error != nil
-                    {
-                        NSLog("An Error Occored:", error!)
-                    }
-                    else
-                    {
-                        NSLog("Fetched Objects To Delete From CoreData...")
-                    }
+                    // 2015-11-27 deeje, we can't figure out how to determine which entity type from just the CKNotification
+                    let entityTypes = ["Project"]
                     
-                    if results?.count > 0
+                    for entityType in entityTypes
                     {
-                        self.managedObjectContext.deleteObject((results?.first! as? NSManagedObject)!)
-                    }
-                    else
-                    {
-                        NSLog("No Record Exists")
+                        let fetch = NSFetchRequest(entityName: entityType)
+                        let predicate = NSPredicate(format: "uuid = %@", recordID!.recordName)
+                        fetch.predicate = predicate
+                        var error: NSError? = nil
+                        
+                        let results: [AnyObject]?
+                        do {
+                            results = try self.managedObjectContext.executeFetchRequest(fetch)
+                        } catch let error1 as NSError {
+                            error = error1
+                            results = nil
+                        } catch {
+                            fatalError()
+                        }
+                        if error != nil
+                        {
+                            NSLog("An Error Occored:", error!)
+                        }
+                        else
+                        {
+                            NSLog("Fetched Objects To Delete From CoreData...")
+                        }
+                        
+                        if results?.count > 0
+                        {
+                            self.managedObjectContext.deleteObject((results?.first! as? NSManagedObject)!)
+                        }
+                        else
+                        {
+                            NSLog("No Record Exists")
+                        }
                     }
                     
                     self.justCompletedSync = true
@@ -423,36 +481,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
     {
         super.init()
         
-        let fetchRequest = NSFetchRequest()
-        // Edit the entity name as appropriate.
-        let entity = NSEntityDescription.entityForName("Project", inManagedObjectContext: self.managedObjectContext)
-        fetchRequest.entity = entity
-        
-        // Set the batch size to a suitable number.
-        fetchRequest.fetchBatchSize = 20
-        
-        // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "dueDate", ascending: true)
-        
-        fetchRequest.sortDescriptors = [sortDescriptor]
-        
-        // Edit the section name key path and cache name if appropriate.
-        // nil for section name key path means "no sections".
-        self.fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: "Master")
-        self.fetchedResultsController!.delegate = self
-        
-        self.managedObjectContext.performBlockAndWait
-        {
-            var error: NSError? = nil
-            do {
-                try self.fetchedResultsController!.performFetch()
-            } catch let error1 as NSError {
-                error = error1
-                print("Unresolved error \(error), \(error!.userInfo)")
-            } catch {
-                fatalError()
-            }
-        }
+        self.setupLocalFetchedResultsController()
         
         NSNotificationCenter.defaultCenter().addObserverForName(NSManagedObjectContextDidSaveNotification, object: nil, queue: nil) { (notification) -> Void in
             let sender = notification.object as! NSManagedObjectContext
@@ -462,44 +491,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
             }
         }
         
-        let defaults = NSUserDefaults.standardUserDefaults()
-        let subscribed = defaults.objectForKey("subscribed") as? Bool
-        if (subscribed != true)
-        {
-            let predicate = NSPredicate(format: "TRUEPREDICATE")
-            
-            let itemSubscription = CKSubscription(recordType: self.entityType(),
-                predicate: predicate,
-                options: [.FiresOnRecordCreation, .FiresOnRecordUpdate, .FiresOnRecordDeletion])
-            
-            let notificationInfo = CKNotificationInfo()
-            notificationInfo.alertLocalizationKey = "Updates In Cloud"
-            notificationInfo.shouldBadge = false
-            
-            itemSubscription.notificationInfo = notificationInfo
-            
-            let privateDatabase = CKContainer.defaultContainer().privateCloudDatabase as CKDatabase
-            
-            privateDatabase.saveSubscription(itemSubscription, completionHandler: { ( subscription, error) -> Void in
-                if error != nil
-                {
-                    NSLog("An error occured in saving subscription: \(error)")
-                }
-                else
-                {
-                    NSLog("Saved Subscription Succesfully")
-                    defaults.setObject(true, forKey: "subscribed")
-                }
-            })
-        }
+        self.setupRemoteSubscriptions()
     }
     
-    /*func contextDidSave(notification: NSNotification)
-    {
-        let sender = notification.object as! NSManagedObjectContext
-        if sender !== self.managedObjectContext
-        {
-            self.managedObjectContext.mergeChangesFromContextDidSaveNotification(notification)
-        }
-    }*/
 }

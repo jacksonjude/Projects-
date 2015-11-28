@@ -6,6 +6,8 @@ import CoreData
 public enum TaskAttributes: String {
     case completionStatus = "completionStatus"
     case name = "name"
+    case syncState = "syncState"
+    case uuid = "uuid"
 }
 
 public enum TaskRelationships: String {
@@ -47,6 +49,16 @@ class _Task: NSManagedObject {
     var name: String?
 
     // func validateName(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
+
+    @NSManaged public
+    var syncState: NSNumber?
+
+    // func validateSyncState(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
+
+    @NSManaged public
+    var uuid: String?
+
+    // func validateUuid(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
 
     // MARK: - Relationships
 

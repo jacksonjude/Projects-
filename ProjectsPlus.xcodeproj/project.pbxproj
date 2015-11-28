@@ -25,10 +25,10 @@
 		7A5658191B3CAFB000469154 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5658171B3CAFB000469154 /* Project.swift */; };
 		7A56581C1B3CB07800469154 /* ProjectsPlus.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7A56581A1B3CB07800469154 /* ProjectsPlus.xcdatamodeld */; };
 		7A56581E1B3CB20300469154 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A56581D1B3CB20300469154 /* CloudKit.framework */; };
+		7A6090761C06C9E5005D9FAB /* Syncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6090751C06C9E5005D9FAB /* Syncable.swift */; };
 		7A8E08CC1B88218A00A24392 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8E08CB1B88218A00A24392 /* SyncEngine.swift */; };
 		7A9B28F31C065DA3007CEB4E /* _Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9B28F11C065DA3007CEB4E /* _Task.swift */; };
 		7A9B28F41C065DA3007CEB4E /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9B28F21C065DA3007CEB4E /* Task.swift */; };
-		7A9B28F61C06B6B7007CEB4E /* ProjectSyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9B28F51C06B6B7007CEB4E /* ProjectSyncEngine.swift */; };
 		7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF171B3B75B4003A007B /* AppDelegate.swift */; };
 		7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */; };
 		7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC2DF1E1B3B75B4003A007B /* DetailViewController.swift */; };
@@ -53,10 +53,10 @@
 		7A5658171B3CAFB000469154 /* Project.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		7A56581B1B3CB07800469154 /* Projects_.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Projects_.xcdatamodel; sourceTree = "<group>"; };
 		7A56581D1B3CB20300469154 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
+		7A6090751C06C9E5005D9FAB /* Syncable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Syncable.swift; sourceTree = "<group>"; };
 		7A8E08CB1B88218A00A24392 /* SyncEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		7A9B28F11C065DA3007CEB4E /* _Task.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = _Task.swift; sourceTree = "<group>"; };
 		7A9B28F21C065DA3007CEB4E /* Task.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
-		7A9B28F51C06B6B7007CEB4E /* ProjectSyncEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProjectSyncEngine.swift; sourceTree = "<group>"; };
 		7AC2DF121B3B75B4003A007B /* ProjectsPlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProjectsPlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC2DF161B3B75B4003A007B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7AC2DF171B3B75B4003A007B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -126,7 +126,7 @@
 				7AC2DF1C1B3B75B4003A007B /* MasterViewController.swift */,
 				7AC2DF1E1B3B75B4003A007B /* DetailViewController.swift */,
 				7A8E08CB1B88218A00A24392 /* SyncEngine.swift */,
-				7A9B28F51C06B6B7007CEB4E /* ProjectSyncEngine.swift */,
+				7A6090751C06C9E5005D9FAB /* Syncable.swift */,
 				7AC2DF201B3B75B4003A007B /* Main.storyboard */,
 				7AC2DF231B3B75B4003A007B /* Images.xcassets */,
 				7AC2DF251B3B75B4003A007B /* LaunchScreen.xib */,
@@ -276,12 +276,12 @@
 			files = (
 				7A9B28F31C065DA3007CEB4E /* _Task.swift in Sources */,
 				7A5658181B3CAFB000469154 /* _Project.swift in Sources */,
-				7A9B28F61C06B6B7007CEB4E /* ProjectSyncEngine.swift in Sources */,
 				7A8E08CC1B88218A00A24392 /* SyncEngine.swift in Sources */,
 				7AC2DF181B3B75B4003A007B /* AppDelegate.swift in Sources */,
 				7AC2DF1D1B3B75B4003A007B /* MasterViewController.swift in Sources */,
 				7AC2DF1F1B3B75B4003A007B /* DetailViewController.swift in Sources */,
 				7A5658191B3CAFB000469154 /* Project.swift in Sources */,
+				7A6090761C06C9E5005D9FAB /* Syncable.swift in Sources */,
 				7A9B28F41C065DA3007CEB4E /* Task.swift in Sources */,
 				7A56581C1B3CB07800469154 /* ProjectsPlus.xcdatamodeld in Sources */,
 			);
@@ -430,6 +430,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlus;
@@ -445,6 +446,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ProjectsPlus/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jacksonjude.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ProjectsPlus;
