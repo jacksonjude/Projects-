@@ -96,6 +96,11 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
                 //println("Unresolved error \(error), \(error.userInfo)")
                 abort()
             }
+            self.navigationItem.leftBarButtonItem?.enabled = true
+        }
+        else
+        {
+            self.navigationItem.leftBarButtonItem?.enabled = false
         }
         self.editingDetails = !self.editingDetails
     }
@@ -109,26 +114,47 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
     
     func addTask()
     {
-        let entity = NSEntityDescription.entityForName("Task", inManagedObjectContext: self.fetchedResultsController.managedObjectContext)
-        let context = self.fetchedResultsController.managedObjectContext
-        let newManagedObject = NSEntityDescription.insertNewObjectForEntityForName(entity!.name!, inManagedObjectContext: context) as! Task
+        var alertController:UIAlertController?
+        alertController = UIAlertController(title: "Name",
+            message: "Enter a name for the task",
+            preferredStyle: .Alert)
         
-        newManagedObject.parentProject = self.detailItem!
-        newManagedObject.name = "Test1"
+        alertController!.addTextFieldWithConfigurationHandler(
+            {(textField: UITextField!) in
+                textField.placeholder = "Name"
+        })
         
-        //self.detailItem?.mutableSetValueForKey(key: String).addObject(object: AnyObject)
+        let action = UIAlertAction(title: "Submit", style: UIAlertActionStyle.Default, handler:
+            {
+                (paramAction:UIAlertAction!) in
+                if let textFields = alertController?.textFields
+                {
+                    let entity = NSEntityDescription.entityForName("Task", inManagedObjectContext: self.fetchedResultsController.managedObjectContext)
+                    let context = self.fetchedResultsController.managedObjectContext
+                    let newManagedObject = NSEntityDescription.insertNewObjectForEntityForName(entity!.name!, inManagedObjectContext: context) as! Task
+                    
+                    let theTextFields = textFields as [UITextField]
+                    let enteredText = theTextFields[0].text
+                    newManagedObject.name = enteredText
+                    
+                    newManagedObject.parentProject = self.detailItem!
+                    newManagedObject.uuid = NSUUID().UUIDString
+                    
+                    //self.detailItem?.mutableSetValueForKey(key: String).addObject(object: AnyObject)
+                    
+                    var error: NSError? = nil
+                    do {
+                        try context.save()
+                    } catch let error1 as NSError {
+                        error = error1
+                        NSLog("%@", error!)
+                        abort()
+                    }
+                }
+            })
         
-        var error: NSError? = nil
-        do {
-            try context.save()
-        } catch let error1 as NSError {
-            error = error1
-            NSLog("%@", error!)
-            // Replace this implementation with code to handle the error appropriately.
-            // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            //println("Unresolved error \(error), \(error.userInfo)")
-            abort()
-        }
+        alertController?.addAction(action)
+        self.presentViewController(alertController!, animated: true, completion: nil)
     }
     
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
@@ -152,6 +178,7 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
             tasksTableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
         case .Delete:
             tasksTableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
+            AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
         case .Update:
             self.configureCell(tasksTableView.cellForRowAtIndexPath(indexPath!)!, atIndexPath: indexPath!)
         case .Move:
@@ -274,7 +301,8 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
         {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Edit, target: self, action: "toggleEditingDetails")
             
-            //disable all fields
+            //disable all field
+            
             if let title = self.projectTitle
             {
                 title.enabled = false

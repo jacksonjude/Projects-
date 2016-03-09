@@ -5,8 +5,10 @@ import CoreData
 
 public enum TaskAttributes: String {
     case completionStatus = "completionStatus"
+    case createdAt = "createdAt"
     case name = "name"
     case syncState = "syncState"
+    case updatedAt = "updatedAt"
     case uuid = "uuid"
 }
 
@@ -46,6 +48,11 @@ class _Task: NSManagedObject {
     // func validateCompletionStatus(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
 
     @NSManaged public
+    var createdAt: NSDate?
+
+    // func validateCreatedAt(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
+
+    @NSManaged public
     var name: String?
 
     // func validateName(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
@@ -54,6 +61,11 @@ class _Task: NSManagedObject {
     var syncState: NSNumber?
 
     // func validateSyncState(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
+
+    @NSManaged public
+    var updatedAt: NSDate?
+
+    // func validateUpdatedAt(value: AutoreleasingUnsafeMutablePointer<AnyObject>, error: NSErrorPointer) -> Bool {}
 
     @NSManaged public
     var uuid: String?

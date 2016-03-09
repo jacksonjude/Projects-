@@ -19,6 +19,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     var syncEngine : SyncEngine?
     
     var masterController : MasterViewController?
+    
+    let kIsSynced = 1
+    let kNeedsSync = 0
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
