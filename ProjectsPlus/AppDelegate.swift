@@ -22,6 +22,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     
     let kIsSynced = 1
     let kNeedsSync = 0
+    
+    var hasEnteredBackground: Bool = false
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
@@ -41,6 +43,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         application.registerForRemoteNotifications()
         
         self.syncEngine = SyncEngine()
+        
+        /*NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationDidEnterBackgroundNotification, object: nil, queue: nil) { (notification) -> Void in
+            
+            self.hasEnteredBackground = true
+            
+            var error: NSError? = nil
+            do {
+                try self.managedObjectContext!.save()
+            } catch let error1 as NSError {
+                error = error1
+                print("Unresolved error \(error), \(error!.userInfo)")
+            } catch {
+                fatalError()
+            }
+        }
+        
+        NSNotificationCenter.defaultCenter().addObserverForName(NSManagedObjectContextDidSaveNotification, object: nil, queue: nil) { (notification) -> Void in
+            let sender = notification.object as! NSManagedObjectContext
+            if sender !== self.managedObjectContext && self.hasEnteredBackground == true
+            {
+                self.managedObjectContext!.mergeChangesFromContextDidSaveNotification(notification)
+                
+                var error: NSError? = nil
+                do {
+                    try self.managedObjectContext!.save()
+                } catch let error1 as NSError {
+                    error = error1
+                    print("Unresolved error \(error), \(error!.userInfo)")
+                } catch {
+                    fatalError()
+                }
+            }
+        }*/
         
         return true
     }

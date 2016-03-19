@@ -18,7 +18,7 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
     @IBOutlet weak var projectDescription: UITextView!
     @IBOutlet weak var addTaskButton: UIButton!
     @IBOutlet weak var tasksTableView: UITableView!
-    
+        
     func numberOfSectionsInTableView(tableView: UITableView) -> Int
     {
         return self.fetchedResultsController.sections?.count ?? 0
@@ -34,6 +34,7 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
     {
         let cell = tableView.dequeueReusableCellWithIdentifier("TaskCell", forIndexPath: indexPath)
         self.configureCell(cell, atIndexPath: indexPath)
+        self.updateImage(indexPath, cell: cell, onStart: true)
         return cell
     }
     
@@ -45,7 +46,7 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
     func configureCell(cell: UITableViewCell, atIndexPath indexPath: NSIndexPath)
     {
         let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Task
-
+        
         cell.textLabel?.font = UIFont(name: "SanFrancisco", size: 1)
         
         cell.textLabel!.text = NSString(format: "%@", object.name!) as String
@@ -139,9 +140,8 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
                     
                     newManagedObject.parentProject = self.detailItem!
                     newManagedObject.uuid = NSUUID().UUIDString
-                    
-                    //self.detailItem?.mutableSetValueForKey(key: String).addObject(object: AnyObject)
-                    
+                    newManagedObject.completionStatus = 0
+                                        
                     var error: NSError? = nil
                     do {
                         try context.save()
@@ -181,9 +181,19 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
             AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
         case .Update:
             self.configureCell(tasksTableView.cellForRowAtIndexPath(indexPath!)!, atIndexPath: indexPath!)
+            AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
+            if controller.managedObjectContext != fetchedResultsController.managedObjectContext
+            {
+                self.updateImage(indexPath!, cell: self.tasksTableView.cellForRowAtIndexPath(indexPath!)!, onStart: true)
+            }
         case .Move:
             tasksTableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
             tasksTableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
+            AppDelegate.sharedAppDelegate().syncEngine?.controller(controller, didChangeObject: anObject, atIndexPath: indexPath, forChangeType: type, newIndexPath: newIndexPath)
+            if controller.managedObjectContext != fetchedResultsController.managedObjectContext
+            {
+                self.updateImage(newIndexPath!, cell: self.tasksTableView.cellForRowAtIndexPath(indexPath!)!, onStart: true)
+            }
         }
     }
     
@@ -210,6 +220,61 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
         }
     }
     
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath)
+    {
+        let cell = tableView.cellForRowAtIndexPath(indexPath)!
+        let taskToUpdate = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Task
+        taskToUpdate.syncState = 0
+        
+        self.updateImage(indexPath, cell: cell, onStart: false)
+        
+        var error: NSError? = nil
+        do {
+            try self.fetchedResultsController.managedObjectContext.save()
+        } catch let error1 as NSError {
+            error = error1
+            NSLog("%@", error!)
+        }
+        
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    }
+    
+    func updateImage(indexPath: NSIndexPath, cell: UITableViewCell, onStart: Bool)
+    {
+        let taskToUpdate = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Task
+        if taskToUpdate.completionStatus == 0
+        {
+            if onStart == false
+            {
+                taskToUpdate.completionStatus = 1
+                let image = UIImage(named: "check")
+                let imageView = UIImageView(frame: CGRectMake(cell.frame.size.width - 30, 10, 25, 25))
+                imageView.image = image
+                imageView.tag = 302
+                cell.addSubview(imageView)
+            }
+        }
+        else
+        {
+            if onStart == false
+            {
+                print(cell.subviews)
+                
+                let imageView = cell.viewWithTag(302)
+                imageView?.removeFromSuperview()
+                taskToUpdate.completionStatus = 0
+            }
+            else
+            {
+                let image = UIImage(named: "check")
+                let imageView = UIImageView(frame: CGRectMake(cell.frame.size.width - 25, 10, 25, 25))
+                imageView.image = image
+                imageView.tag = 302
+                cell.addSubview(imageView)
+            }
+        }
+    }
+    
     var fetchedResultsController: NSFetchedResultsController {
         if _fetchedResultsController != nil {
             return _fetchedResultsController!
@@ -224,7 +289,7 @@ class DetailViewController: UIViewController, UITableViewDataSource, UITableView
         fetchRequest.fetchBatchSize = 20
         
         // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        let sortDescriptor = NSSortDescriptor(key: "createdAt", ascending: true)
         
         fetchRequest.sortDescriptors = [sortDescriptor]
         

@@ -17,7 +17,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
     let kNeedsSync = 0
     
     var justCompletedSync = false
-    
+        
     let remoteSubscriptions = NSMutableDictionary()
     let localFetchedResultsController = NSMutableArray()
     
@@ -48,7 +48,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
         
         // Edit the section name key path and cache name if appropriate.
         // nil for section name key path means "no sections".
-        let projectsFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: "Master")
+        let projectsFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
         projectsFetchedResultsController.delegate = self
         
         self.managedObjectContext.performBlockAndWait
@@ -83,7 +83,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
         
         // Edit the section name key path and cache name if appropriate.
         // nil for section name key path means "no sections".
-        let tasksFetchedResultsController = NSFetchedResultsController(fetchRequest: taskFetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: "Master")
+        let tasksFetchedResultsController = NSFetchedResultsController(fetchRequest: taskFetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
         tasksFetchedResultsController.delegate = self
         
         self.managedObjectContext.performBlockAndWait
@@ -161,7 +161,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
                             
                             privateDatabase.saveRecord(remoteRecord, completionHandler: { (record, error) -> Void in
                                 if (error != nil) {
-                                    //NSLog("Error: \(error)")
+                                    NSLog("Error: \(error)")
                                 }
                                 else
                                 {
@@ -419,6 +419,8 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
             let cloudKitQueryNotification: CKQueryNotification = (cloudKitNotification as? CKQueryNotification)!
             let recordID = cloudKitQueryNotification.recordID
             
+            //let fetchRecordChangesOperation = CKFetchRecordChangesOperation(CKRecordZoneID())
+            
             switch cloudKitQueryNotification.queryNotificationReason
             {
             case .RecordCreated:
@@ -610,7 +612,7 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
         taskFetchRequest.sortDescriptors = [sortDescriptor]
         //let predicate = NSPredicate(format: "syncState == %i", self.kNeedsSync)
         taskFetchRequest.predicate = predicate
-        let tasksFetchedResultsController = NSFetchedResultsController(fetchRequest: taskFetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: "Master")
+        let tasksFetchedResultsController = NSFetchedResultsController(fetchRequest: taskFetchRequest, managedObjectContext: self.managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
         tasksFetchedResultsController.delegate = self
         
         self.managedObjectContext.performBlockAndWait
@@ -646,6 +648,18 @@ class SyncEngine: NSObject, NSFetchedResultsControllerDelegate
             if sender !== self.managedObjectContext
             {
                 self.managedObjectContext.mergeChangesFromContextDidSaveNotification(notification)
+            }
+        }
+        
+        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationDidEnterBackgroundNotification, object: nil, queue: nil) { (notification) -> Void in
+            var error: NSError? = nil
+            do {
+                try self.managedObjectContext.save()
+            } catch let error1 as NSError {
+                error = error1
+                print("Unresolved error \(error), \(error!.userInfo)")
+            } catch {
+                fatalError()
             }
         }
         
